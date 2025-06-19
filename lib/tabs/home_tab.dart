@@ -1,8 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../services/receipt_service.dart';
 
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  List<Map<String, dynamic>> _receipts = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchReceipts();
+  }
+
+  Future<void> _fetchReceipts() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final response = await ReceiptService.getReceipts(limit: 5);
+      
+      if (response['success'] == true) {
+        final data = response['data'];
+        setState(() {
+          _receipts = List<Map<String, dynamic>>.from(data['receipts'] ?? []);
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = response['message'] ?? 'Failed to load receipts';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error loading receipts: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,17 +162,25 @@ class HomeTab extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Recent Receipts
-            const Text(
-              'Recent Receipts',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Recent Receipts',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (!_isLoading)
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: _fetchReceipts,
+                  ),
+              ],
             ),
             const SizedBox(height: 16),
-            _buildReceiptCard('Grocery Store', '\$45.67', 'Today'),
-            _buildReceiptCard('Gas Station', '\$32.10', 'Yesterday'),
-            _buildReceiptCard('Restaurant', '\$78.90', '2 days ago'),
+            _buildReceiptsSection(),
           ],
         ),
       ),
@@ -180,7 +233,114 @@ class HomeTab extends StatelessWidget {
     );
   }
 
-  Widget _buildReceiptCard(String store, String amount, String date) {
+  Widget _buildReceiptsSection() {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.0),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.red.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: Colors.red,
+              size: 32,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _errorMessage!,
+              style: TextStyle(
+                color: Colors.red[700],
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: _fetchReceipts,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_receipts.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 48,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No receipts found',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Start by adding your first receipt!',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: _receipts.map((receipt) => _buildReceiptCard(receipt)).toList(),
+    );
+  }
+
+  Widget _buildReceiptCard(Map<String, dynamic> receipt) {
+    final merchantName = receipt['merchant_name'] ?? 'Unknown Merchant';
+    final totalAmount = receipt['total_amount'] ?? '0.00';
+    final currency = receipt['currency'] ?? 'MYR';
+    final date = receipt['date'] != null 
+        ? DateTime.parse(receipt['date']).toLocal()
+        : DateTime.now();
+    final description = receipt['description'] ?? '';
+    
+    // Format date
+    final now = DateTime.now();
+    final difference = now.difference(date).inDays;
+    String dateText;
+    if (difference == 0) {
+      dateText = 'Today';
+    } else if (difference == 1) {
+      dateText = 'Yesterday';
+    } else if (difference < 7) {
+      dateText = '$difference days ago';
+    } else {
+      dateText = '${date.day}/${date.month}/${date.year}';
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -215,14 +375,24 @@ class HomeTab extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  store,
+                  merchantName,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
                 ),
+                if (description.isNotEmpty)
+                  Text(
+                    description,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 Text(
-                  date,
+                  dateText,
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
@@ -232,7 +402,7 @@ class HomeTab extends StatelessWidget {
             ),
           ),
           Text(
-            amount,
+            '$currency $totalAmount',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
