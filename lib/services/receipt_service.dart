@@ -104,6 +104,13 @@ class ReceiptService {
     );
   }
 
+  // Get receipt items by receipt ID
+  static Future<Map<String, dynamic>> getReceiptItems(String receiptId) async {
+    return await BaseApiService.get(
+      '${ApiConfig.receiptsEndpoint}/$receiptId/items',
+    );
+  }
+
   // Get receipt statistics
   static Future<Map<String, dynamic>> getReceiptStats({
     String? startDate,
