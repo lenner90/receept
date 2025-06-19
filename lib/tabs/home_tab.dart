@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
@@ -10,6 +11,10 @@ class HomeTab extends StatelessWidget {
         title: const Text('Receept'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
