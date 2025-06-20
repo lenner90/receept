@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
+import 'auth_service.dart';
 
 class BaseApiService {
   static final http.Client _client = http.Client();
@@ -27,8 +28,12 @@ class BaseApiService {
     return prefs.getString('access_token');
   }
 
-  // Handle API response
-  static Map<String, dynamic> _handleResponse(http.Response response) {
+  // Handle API response with token refresh logic
+  static Future<Map<String, dynamic>> _handleResponse(
+    http.Response response, {
+    Function? retryRequest,
+    bool includeAuth = true,
+  }) async {
     try {
       final responseData = json.decode(response.body);
       
@@ -38,6 +43,22 @@ class BaseApiService {
           'data': responseData,
           'statusCode': response.statusCode,
         };
+      } else if (response.statusCode == 401 && includeAuth && retryRequest != null) {
+        // Token expired, try to refresh
+        final refreshResult = await AuthService.refreshToken();
+        
+        if (refreshResult['success']) {
+          // Retry the original request with new token
+          return await retryRequest();
+        } else {
+          // Refresh failed, return unauthorized error
+          return {
+            'success': false,
+            'message': 'Session expired. Please login again.',
+            'statusCode': 401,
+            'error': 'token_expired',
+          };
+        }
       } else {
         return {
           'success': false,
@@ -85,16 +106,24 @@ class BaseApiService {
     bool includeAuth = true,
   }) async {
     try {
-      final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint')
-          .replace(queryParameters: queryParams);
+      Future<Map<String, dynamic>> makeRequest() async {
+        final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint')
+            .replace(queryParameters: queryParams);
+        
+        final headers = await _getHeaders(includeAuth: includeAuth);
+        
+        final response = await _client
+            .get(uri, headers: headers)
+            .timeout(ApiConfig.requestTimeout);
+        
+        return await _handleResponse(
+          response,
+          retryRequest: makeRequest,
+          includeAuth: includeAuth,
+        );
+      }
       
-      final headers = await _getHeaders(includeAuth: includeAuth);
-      
-      final response = await _client
-          .get(uri, headers: headers)
-          .timeout(ApiConfig.requestTimeout);
-      
-      return _handleResponse(response);
+      return await makeRequest();
     } catch (e) {
       return _handleError(e);
     }
@@ -107,18 +136,26 @@ class BaseApiService {
     bool includeAuth = true,
   }) async {
     try {
-      final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-      final headers = await _getHeaders(includeAuth: includeAuth);
+      Future<Map<String, dynamic>> makeRequest() async {
+        final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
+        final headers = await _getHeaders(includeAuth: includeAuth);
+        
+        final response = await _client
+            .post(
+              uri,
+              headers: headers,
+              body: body != null ? json.encode(body) : null,
+            )
+            .timeout(ApiConfig.requestTimeout);
+        
+        return await _handleResponse(
+          response,
+          retryRequest: makeRequest,
+          includeAuth: includeAuth,
+        );
+      }
       
-      final response = await _client
-          .post(
-            uri,
-            headers: headers,
-            body: body != null ? json.encode(body) : null,
-          )
-          .timeout(ApiConfig.requestTimeout);
-      
-      return _handleResponse(response);
+      return await makeRequest();
     } catch (e) {
       return _handleError(e);
     }
@@ -131,18 +168,26 @@ class BaseApiService {
     bool includeAuth = true,
   }) async {
     try {
-      final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-      final headers = await _getHeaders(includeAuth: includeAuth);
+      Future<Map<String, dynamic>> makeRequest() async {
+        final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
+        final headers = await _getHeaders(includeAuth: includeAuth);
+        
+        final response = await _client
+            .put(
+              uri,
+              headers: headers,
+              body: body != null ? json.encode(body) : null,
+            )
+            .timeout(ApiConfig.requestTimeout);
+        
+        return await _handleResponse(
+          response,
+          retryRequest: makeRequest,
+          includeAuth: includeAuth,
+        );
+      }
       
-      final response = await _client
-          .put(
-            uri,
-            headers: headers,
-            body: body != null ? json.encode(body) : null,
-          )
-          .timeout(ApiConfig.requestTimeout);
-      
-      return _handleResponse(response);
+      return await makeRequest();
     } catch (e) {
       return _handleError(e);
     }
@@ -154,14 +199,22 @@ class BaseApiService {
     bool includeAuth = true,
   }) async {
     try {
-      final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-      final headers = await _getHeaders(includeAuth: includeAuth);
+      Future<Map<String, dynamic>> makeRequest() async {
+        final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
+        final headers = await _getHeaders(includeAuth: includeAuth);
+        
+        final response = await _client
+            .delete(uri, headers: headers)
+            .timeout(ApiConfig.requestTimeout);
+        
+        return await _handleResponse(
+          response,
+          retryRequest: makeRequest,
+          includeAuth: includeAuth,
+        );
+      }
       
-      final response = await _client
-          .delete(uri, headers: headers)
-          .timeout(ApiConfig.requestTimeout);
-      
-      return _handleResponse(response);
+      return await makeRequest();
     } catch (e) {
       return _handleError(e);
     }
@@ -174,18 +227,26 @@ class BaseApiService {
     bool includeAuth = true,
   }) async {
     try {
-      final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-      final headers = await _getHeaders(includeAuth: includeAuth);
+      Future<Map<String, dynamic>> makeRequest() async {
+        final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
+        final headers = await _getHeaders(includeAuth: includeAuth);
+        
+        final response = await _client
+            .patch(
+              uri,
+              headers: headers,
+              body: body != null ? json.encode(body) : null,
+            )
+            .timeout(ApiConfig.requestTimeout);
+        
+        return await _handleResponse(
+          response,
+          retryRequest: makeRequest,
+          includeAuth: includeAuth,
+        );
+      }
       
-      final response = await _client
-          .patch(
-            uri,
-            headers: headers,
-            body: body != null ? json.encode(body) : null,
-          )
-          .timeout(ApiConfig.requestTimeout);
-      
-      return _handleResponse(response);
+      return await makeRequest();
     } catch (e) {
       return _handleError(e);
     }

@@ -117,6 +117,49 @@ class AuthService {
     return accessToken != null;
   }
 
+  // Refresh access token using refresh token
+  static Future<Map<String, dynamic>> refreshToken() async {
+    final refreshToken = await getRefreshToken();
+    
+    if (refreshToken == null) {
+      return {
+        'success': false,
+        'message': 'No refresh token available',
+      };
+    }
+
+    final result = await BaseApiService.post(
+      '${ApiConfig.authEndpoint}/refresh-token',
+      body: {
+        'refreshToken': refreshToken,
+      },
+      includeAuth: false, // No auth needed for refresh
+    );
+
+    if (result['success']) {
+      final data = result['data'];
+      
+      // Save new tokens
+      await _saveTokens(
+        data['accessToken'],
+        data['refreshToken'],
+      );
+      
+      return {
+        'success': true,
+        'accessToken': data['accessToken'],
+        'refreshToken': data['refreshToken'],
+      };
+    } else {
+      // If refresh fails, clear all tokens (user needs to login again)
+      await logout();
+      return {
+        'success': false,
+        'message': result['message'] ?? 'Token refresh failed',
+      };
+    }
+  }
+
   // Logout
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
