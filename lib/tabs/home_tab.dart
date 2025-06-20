@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../services/receipt_service.dart';
 import '../screens/receipt_detail_page.dart';
 import '../screens/add_receipt_page.dart';
+import '../screens/search_page.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -86,7 +87,12 @@ class _HomeTabState extends State<HomeTab> {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // Handle search
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SearchPage(),
+                ),
+              );
             },
           ),
         ],

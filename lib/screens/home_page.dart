@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../tabs/home_tab.dart';
 import '../tabs/stats_tab.dart';
 import '../tabs/settings_tab.dart';
+import 'search_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

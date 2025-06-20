@@ -23,6 +23,39 @@ class ReceiptService {
       queryParams: queryParams,
     );
   }
+  
+  // Search receipts by query
+  static Future<Map<String, dynamic>> searchReceipts({
+    required String query,
+    String searchType = 'all',
+    int page = 1,
+    int limit = 10,
+    String? sortBy,
+    String? sortOrder,
+  }) async {
+    final queryParams = <String, String>{
+      'q': query,
+      'page': page.toString(),
+      'limit': limit.toString(),
+    };
+    
+    if (searchType != 'all') {
+      queryParams['search_type'] = searchType;
+    }
+    
+    if (sortBy != null) {
+      queryParams['sort_by'] = sortBy;
+    }
+    
+    if (sortOrder != null) {
+      queryParams['sort_order'] = sortOrder;
+    }
+    
+    return await BaseApiService.get(
+      '${ApiConfig.receiptsEndpoint}/search',
+      queryParams: queryParams,
+    );
+  }
 
   // Get a specific receipt by ID
   static Future<Map<String, dynamic>> getReceiptById(String receiptId) async {
