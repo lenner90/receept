@@ -1,7 +1,7 @@
 class ApiConfig {
   // Environment-based configuration
   // static const String _devBaseUrl = 'http://localhost:3000/api';
-  static const String _devBaseUrl = 'http://192.168.0.106:3000/api';
+  static const String _devBaseUrl = 'http://192.168.10.123:3000/api';
   static const String _prodBaseUrl = 'https://your-production-api.com/api';
   
   // Current environment (change this based on your build configuration)

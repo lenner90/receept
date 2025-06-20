@@ -62,7 +62,7 @@ class BaseApiService {
       } else {
         return {
           'success': false,
-          'message': responseData['message'] ?? 'Request failed',
+          'message': responseData['error'] ?? 'Request failed',
           'statusCode': response.statusCode,
           'error': responseData,
         };

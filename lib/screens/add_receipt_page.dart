@@ -22,7 +22,8 @@ class _AddReceiptPageState extends State<AddReceiptPage> {
   List<ReceiptItem> _items = [];
   bool _isLoading = false;
 
-  final List<String> _currencies = ['MYR', 'USD', 'EUR', 'SGD', 'GBP'];
+  // final List<String> _currencies = ['MYR', 'USD', 'EUR', 'SGD', 'GBP'];
+  final List<String> _currencies = ['MYR', 'SGD'];
 
   @override
   void dispose() {
