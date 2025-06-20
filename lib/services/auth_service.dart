@@ -5,6 +5,39 @@ import '../config/api_config.dart';
 
 class AuthService {
   
+  // Signup method
+  static Future<Map<String, dynamic>> signup({
+    required String username,
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+  }) async {
+    final result = await BaseApiService.post(
+      '${ApiConfig.authEndpoint}/signup',
+      body: {
+        'username': username,
+        'email': email,
+        'password': password,
+        'first_name': firstName,
+        'last_name': lastName,
+      },
+      includeAuth: false, // No auth needed for signup
+    );
+
+    if (result['success']) {
+      return {
+        'success': true,
+        'message': result['message'] ?? 'Account created successfully',
+      };
+    } else {
+      return {
+        'success': false,
+        'message': result['message'] ?? 'Signup failed',
+      };
+    }
+  }
+
   // Login method
   static Future<Map<String, dynamic>> login(String identifier, String password) async {
     final result = await BaseApiService.post(
