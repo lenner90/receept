@@ -252,6 +252,51 @@ class BaseApiService {
     }
   }
 
+  // POST request with multipart form data
+  static Future<Map<String, dynamic>> postMultipart(
+    String endpoint, {
+    Map<String, String>? fields,
+    List<http.MultipartFile>? files,
+    bool includeAuth = true,
+  }) async {
+    try {
+      Future<Map<String, dynamic>> makeRequest() async {
+        final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
+        final request = http.MultipartRequest('POST', uri);
+        
+        // Add headers
+        final headers = await _getHeaders(includeAuth: includeAuth);
+        request.headers.addAll(headers);
+        
+        // Remove content-type header as it will be set automatically for multipart
+        request.headers.remove('Content-Type');
+        
+        // Add fields
+        if (fields != null) {
+          request.fields.addAll(fields);
+        }
+        
+        // Add files
+        if (files != null) {
+          request.files.addAll(files);
+        }
+        
+        final streamedResponse = await request.send().timeout(ApiConfig.requestTimeout);
+        final response = await http.Response.fromStream(streamedResponse);
+        
+        return await _handleResponse(
+          response,
+          retryRequest: makeRequest,
+          includeAuth: includeAuth,
+        );
+      }
+      
+      return await makeRequest();
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
   // Dispose client
   static void dispose() {
     _client.close();

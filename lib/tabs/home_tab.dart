@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/receipt_service.dart';
 import '../screens/receipt_detail_page.dart';
+import '../screens/add_receipt_page.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -47,6 +48,20 @@ class _HomeTabState extends State<HomeTab> {
         _errorMessage = 'Error loading receipts: ${e.toString()}';
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _navigateToAddReceipt() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AddReceiptPage(),
+      ),
+    );
+    
+    // Refresh receipts if a new receipt was added
+    if (result == true) {
+      _fetchReceipts();
     }
   }
 
@@ -135,12 +150,7 @@ class _HomeTabState extends State<HomeTab> {
                     'Add Receipt',
                     Icons.add_circle_outline,
                     Colors.green,
-                    () {
-                      // Handle add receipt
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Add Receipt feature coming soon!')),
-                      );
-                    },
+                    _navigateToAddReceipt,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -186,12 +196,8 @@ class _HomeTabState extends State<HomeTab> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Handle add new receipt
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Add new receipt feature coming soon!')),
-          );
-        },
+        onPressed: _navigateToAddReceipt,
+        backgroundColor: Colors.green,
         child: const Icon(Icons.add),
       ),
     );
@@ -231,6 +237,11 @@ class _HomeTabState extends State<HomeTab> {
           ],
         ),
       ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _navigateToAddReceipt,
+      //   child: const Icon(Icons.add),
+      //   tooltip: 'Add Receipt',
+      // ),
     );
   }
 
