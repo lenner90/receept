@@ -417,7 +417,8 @@ class _SearchPageState extends State<SearchPage> {
               ),
               
               // Show matched items if searching for items
-              if (_searchType == 'items' && matchedItems.isNotEmpty) ..[
+              if (_searchType == 'items' && matchedItems.isNotEmpty) ...
+              [
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(8),
@@ -501,7 +502,8 @@ class _SearchPageState extends State<SearchPage> {
               ],
               
               // Show search match indicator for merchant search
-              if (_searchType == 'merchant' && _searchQuery != null) ..[
+              if (_searchType == 'merchant' && _searchQuery != null) ...
+              [
                 const SizedBox(height: 8),
                 if (merchantName.toLowerCase().contains(_searchQuery!.toLowerCase()))
                   Container(
