@@ -320,20 +320,23 @@ class _SearchPageState extends State<SearchPage> {
     final description = receipt['description'] ?? '';
     final matchedItems = receipt['matched_items'] as List<dynamic>? ?? [];
     
-    // Debug: Print receipt data to see what's available
-    print('Receipt data: ${receipt.keys}');
-    print('Matched items: $matchedItems');
-    print('Search type: $_searchType');
-    
-    // If API doesn't return matched_items, we'll simulate it for items search
-    List<dynamic> displayMatchedItems = matchedItems;
-    if (_searchType == 'items' && matchedItems.isEmpty && _searchQuery != null && _searchQuery!.isNotEmpty) {
-      // Try to get items from receipt and filter them
+    // Get items from receipt and filter based on search query
+    List<dynamic> displayMatchedItems = [];
+    if (_searchQuery != null && _searchQuery!.isNotEmpty) {
       final items = receipt['items'] as List<dynamic>? ?? [];
       displayMatchedItems = items.where((item) {
         final itemName = item['name']?.toString().toLowerCase() ?? '';
         return itemName.contains(_searchQuery!.toLowerCase());
       }).toList();
+      
+      // Debug: Print what we found
+      print('Search query: $_searchQuery');
+      print('Search type: $_searchType');
+      print('Items found: ${items.length}');
+      print('Matched items: ${displayMatchedItems.length}');
+      if (displayMatchedItems.isNotEmpty) {
+        print('First matched item: ${displayMatchedItems.first['name']}');
+      }
     }
     
     // Format date
@@ -432,8 +435,8 @@ class _SearchPageState extends State<SearchPage> {
                 ],
               ),
               
-              // Show matched items if searching for items
-              if (_searchType == 'items' && displayMatchedItems.isNotEmpty) ...
+              // Show matched items if there are any matches
+              if (displayMatchedItems.isNotEmpty) ...
               [
                 const SizedBox(height: 12),
                 Container(
