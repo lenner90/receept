@@ -320,6 +320,22 @@ class _SearchPageState extends State<SearchPage> {
     final description = receipt['description'] ?? '';
     final matchedItems = receipt['matched_items'] as List<dynamic>? ?? [];
     
+    // Debug: Print receipt data to see what's available
+    print('Receipt data: ${receipt.keys}');
+    print('Matched items: $matchedItems');
+    print('Search type: $_searchType');
+    
+    // If API doesn't return matched_items, we'll simulate it for items search
+    List<dynamic> displayMatchedItems = matchedItems;
+    if (_searchType == 'items' && matchedItems.isEmpty && _searchQuery != null && _searchQuery!.isNotEmpty) {
+      // Try to get items from receipt and filter them
+      final items = receipt['items'] as List<dynamic>? ?? [];
+      displayMatchedItems = items.where((item) {
+        final itemName = item['name']?.toString().toLowerCase() ?? '';
+        return itemName.contains(_searchQuery!.toLowerCase());
+      }).toList();
+    }
+    
     // Format date
     final now = DateTime.now();
     final difference = now.difference(date).inDays;
@@ -417,7 +433,7 @@ class _SearchPageState extends State<SearchPage> {
               ),
               
               // Show matched items if searching for items
-              if (_searchType == 'items' && matchedItems.isNotEmpty) ...
+              if (_searchType == 'items' && displayMatchedItems.isNotEmpty) ...
               [
                 const SizedBox(height: 12),
                 Container(
@@ -452,7 +468,7 @@ class _SearchPageState extends State<SearchPage> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      ...matchedItems.take(3).map((item) => Padding(
+                      ...displayMatchedItems.take(3).map((item) => Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Row(
                           children: [
@@ -479,14 +495,14 @@ class _SearchPageState extends State<SearchPage> {
                           ],
                         ),
                       )),
-                      if (matchedItems.length > 3)
+                      if (displayMatchedItems.length > 3)
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Row(
                             children: [
                               const SizedBox(width: 20),
                               Text(
-                                '... and ${matchedItems.length - 3} more items',
+                                '... and ${displayMatchedItems.length - 3} more items',
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey[500],
