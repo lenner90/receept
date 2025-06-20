@@ -329,14 +329,7 @@ class _SearchPageState extends State<SearchPage> {
         return itemName.contains(_searchQuery!.toLowerCase());
       }).toList();
       
-      // Debug: Print what we found
-      print('Search query: $_searchQuery');
-      print('Search type: $_searchType');
-      print('Items found: ${items.length}');
-      print('Matched items: ${displayMatchedItems.length}');
-      if (displayMatchedItems.isNotEmpty) {
-        print('First matched item: ${displayMatchedItems.first['name']}');
-      }
+
     }
     
     // Format date
